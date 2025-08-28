@@ -29,7 +29,7 @@ const LastSyncBanner = () => {
             cache: 'no-store',
           }),
         ]);
-
+        await console.log('printerRes:', printerRes);
         const syncData = syncRes.ok ? await syncRes.json() : null;
         const printerData = printerRes.ok ? await printerRes.json() : null;
 
@@ -46,7 +46,7 @@ const LastSyncBanner = () => {
 
         setState({
           syncInfo: formattedSync,
-          printerInfo: printerData?.[0]?.NAME || null,
+          printerInfo:  printerData?.defaultPrinter[0] || null,
           isLoading: false,
           hasError: !syncRes.ok,
           hasPrinterError: !printerRes.ok,
