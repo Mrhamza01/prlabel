@@ -5,8 +5,9 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
+import getPrintersManual from './test.js';
 
-const { print, getPrinters, getDefaultPrinter } = pkg;
+const { print } = pkg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -33,7 +34,8 @@ app.get('/', (req, res) => {
 // ✅ Get connected printers
 app.get('/printers', async (req, res) => {
   try {
-    const printers = await getPrinters();
+    const printers = await getPrintersManual();
+    console.log('✅ Printers fetched:', printers);
     res.json({ printers });
   } catch (err) {
     console.error('❌ Printer list error:', err.message);
@@ -44,7 +46,8 @@ app.get('/printers', async (req, res) => {
 // ✅ Get default printers
 app.get('/printers/default', async (req, res) => {
   try {
-    const defaultPrinter = await getDefaultPrinter();
+    const defaultPrinter = await getPrintersManual();
+    console.log(defaultPrinter)
     res.json({ defaultPrinter });
   } catch (err) {
     console.error('❌ Default printer error:', err.message);
