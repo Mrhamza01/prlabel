@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Print Shipping Label</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 50px;
+      }
+      button {
+        padding: 10px 20px;
+        background: blue;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: darkblue;
+      }
+      .error {
+        color: red;
+        margin-top: 20px;
+      }
+      .success {
+        color: green;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>📦 Print Shipping Label</h1>
+
+    <form method="POST" action="/print">
+      <button type="submit">Fetch & Print</button>
+    </form>
+
+    <% if (error) { %>
+    <p class="error"><%= error %></p>
+    <% } %> <% if (success) { %>
+    <p class="success"><%= success %></p>
+    <% } %>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+onlyBuiltDependencies:
+  - '@tailwindcss/oxide'
+  - oracledb
+  - sharp
+  - unrs-resolver
