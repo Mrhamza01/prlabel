@@ -1,5 +1,5 @@
-'use client';
-import React from 'react';
+"use client";
+import React from "react";
 import {
   ArrowRight,
   Package,
@@ -10,45 +10,46 @@ import {
   Zap,
   Shield,
   CheckCircle,
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import LastSyncBanner from "@/components/Last-sync-banner";
 
 export default function ShipStationLanding() {
   const router = useRouter();
   const handleGetStarted = () => {
-    router.push('/pick-lists');
+    router.push("/pick-lists");
   };
 
   const features = [
     {
       icon: <Package className="w-6 h-6" />,
-      title: 'Smart Pick Lists',
-      description: 'AI-powered optimization reduces walking time by 40%',
+      title: "Smart Pick Lists",
+      description: "AI-powered optimization reduces walking time by 40%",
     },
     {
       icon: <Clock className="w-6 h-6" />,
-      title: 'Real-Time Tracking',
-      description: 'Live updates and instant notifications',
+      title: "Real-Time Tracking",
+      description: "Live updates and instant notifications",
     },
     {
       icon: <BarChart3 className="w-6 h-6" />,
-      title: 'Advanced Analytics',
-      description: 'Actionable insights to boost performance',
+      title: "Advanced Analytics",
+      description: "Actionable insights to boost performance",
     },
     {
       icon: <Users className="w-6 h-6" />,
-      title: 'Team Management',
-      description: 'Streamlined task assignment and monitoring',
+      title: "Team Management",
+      description: "Streamlined task assignment and monitoring",
     },
     {
       icon: <Shield className="w-6 h-6" />,
-      title: 'Enterprise Security',
-      description: 'SOC 2 compliant with bank-level encryption',
+      title: "Enterprise Security",
+      description: "SOC 2 compliant with bank-level encryption",
     },
     {
       icon: <Zap className="w-6 h-6" />,
-      title: 'Lightning Fast',
-      description: 'Process 1000+ orders per minute',
+      title: "Lightning Fast",
+      description: "Process 1000+ orders per minute",
     },
   ];
 
@@ -71,13 +72,17 @@ export default function ShipStationLanding() {
               ShipStation
             </span>
           </div>
-          <button
-            onClick={handleGetStarted}
-            className="group bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/30 text-white px-6 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2"
-          >
-            <span className="font-medium">Go to Pick Lists</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
+          <div className="flex gap-2">
+            <LastSyncBanner />
+
+            <button
+              onClick={handleGetStarted}
+              className="group bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/30 text-white px-6 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2"
+            >
+              <span className="font-medium">Go to Pick Lists</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
         </nav>
       </header>
 
@@ -178,22 +183,22 @@ export default function ShipStationLanding() {
                   <div className="space-y-3">
                     {[
                       {
-                        id: '1001',
+                        id: "1001",
                         items: 5,
-                        status: 'Ready',
-                        color: 'from-green-500 to-emerald-600',
+                        status: "Ready",
+                        color: "from-green-500 to-emerald-600",
                       },
                       {
-                        id: '1002',
+                        id: "1002",
                         items: 8,
-                        status: 'Processing',
-                        color: 'from-blue-500 to-cyan-600',
+                        status: "Processing",
+                        color: "from-blue-500 to-cyan-600",
                       },
                       {
-                        id: '1003',
+                        id: "1003",
                         items: 3,
-                        status: 'Complete',
-                        color: 'from-purple-500 to-pink-600',
+                        status: "Complete",
+                        color: "from-purple-500 to-pink-600",
                       },
                     ].map((list, i) => (
                       <div
@@ -237,7 +242,7 @@ export default function ShipStationLanding() {
                     <div className="w-full bg-white/10 rounded-full h-2">
                       <div
                         className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-1000 ease-out"
-                        style={{ width: '87%' }}
+                        style={{ width: "87%" }}
                       ></div>
                     </div>
                   </div>

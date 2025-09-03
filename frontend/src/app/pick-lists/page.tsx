@@ -1,7 +1,7 @@
-// app/pick-lists/page.tsx
-"use client";
+'use client';
 
 import React, { useEffect, useState } from "react";
+import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -15,35 +15,50 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Search, 
-  Package, 
-  Calendar, 
-  User, 
-  MessageSquare, 
+import {
+  Search,
+  Package,
+  Calendar,
+  User,
+  MessageSquare,
   ArrowRight,
   RefreshCw,
   Clock,
   TrendingUp,
-  CheckCircle
+  CheckCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { usePickListStore } from "@/store/usePickListStore";
+import LastSyncBanner from "@/components/Last-sync-banner";
 
 const PickListsPage = () => {
   const router = useRouter();
+
+  // Protect the route
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const logout = useAuthStore((state) => state.logout);
+  //   const { isAuthenticated, username, logout } = useAuthStore((state) => ({
+  //   isAuthenticated: state.isAuthenticated,
+  //   username: state.username,
+  //   logout: state.logout,
+  // }));
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isAuthenticated, router]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("pending"); // Default to pending
-  
-  const { 
-    pickLists, 
-    pickListsLoading, 
-    pickListsError, 
+
+  const {
+    pickLists,
+    pickListsLoading,
+    pickListsError,
     allPickListsStats,
     fetchPickLists,
     fetchPickListsStats,
     clearPickListLines,
-    clearSearch
+    clearSearch,
   } = usePickListStore();
 
   useEffect(() => {
@@ -51,7 +66,13 @@ const PickListsPage = () => {
     fetchPickListsStats();
     clearPickListLines();
     clearSearch();
-  }, [statusFilter, fetchPickLists, fetchPickListsStats, clearPickListLines, clearSearch]);
+  }, [
+    statusFilter,
+    fetchPickLists,
+    fetchPickListsStats,
+    clearPickListLines,
+    clearSearch,
+  ]);
 
   const handleRowClick = (pickListId: number) => {
     router.push(`/pick-lists-lines?PICK_LIST_ID=${pickListId}`);
@@ -67,31 +88,39 @@ const PickListsPage = () => {
   };
 
   // Filter and search logic
-  const filteredPickLists = pickLists.filter(pick => {
-    const matchesSearch = 
+  const filteredPickLists = pickLists.filter((pick) => {
+    const matchesSearch =
       pick.ORDER_NUMBER.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pick.PICK_LIST_ID.toString().includes(searchTerm) ||
-      (pick.REMARKS && pick.REMARKS.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+      (pick.REMARKS &&
+        pick.REMARKS.toLowerCase().includes(searchTerm.toLowerCase()));
+
     return matchesSearch;
   });
 
   // Stats calculation - use store stats if available, fallback to current list
   const stats = allPickListsStats || {
     total: pickLists.length,
-    pending: pickLists.filter(p => p.status === 'pending').length,
-    completed: pickLists.filter(p => p.status === 'completed').length,
+    pending: pickLists.filter((p) => p.status === "pending").length,
+    completed: pickLists.filter((p) => p.status === "completed").length,
   };
 
   // Additional stats
   const additionalStats = {
-    assigned: pickLists.filter(p => p.ASSIGNEE_ID).length,
-    today: pickLists.filter(p => {
+    assigned: pickLists.filter((p) => p.ASSIGNEE_ID).length,
+    today: pickLists.filter((p) => {
       const today = new Date();
       const orderDate = new Date(p.ORDER_DATE);
       return orderDate.toDateString() === today.toDateString();
-    }).length
+    }).length,
   };
+
+   const handleLogout = () => {
+    logout();
+    router.replace('/login');
+  };
+
+  if (!isAuthenticated) return null;
 
   // Loading state
   if (pickListsLoading) {
@@ -101,8 +130,12 @@ const PickListsPage = () => {
           <div className="flex items-center justify-center h-96">
             <div className="text-center space-y-4">
               <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
-              <div className="text-lg font-medium text-slate-600">Loading pick lists...</div>
-              <div className="text-sm text-slate-400">Fetching your dispatch data</div>
+              <div className="text-lg font-medium text-slate-600">
+                Loading pick lists...
+              </div>
+              <div className="text-sm text-slate-400">
+                Fetching your dispatch data
+              </div>
             </div>
           </div>
         </div>
@@ -121,9 +154,15 @@ const PickListsPage = () => {
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Package className="w-6 h-6 text-red-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-red-900 mb-2">Error Loading Pick Lists</h3>
+                <h3 className="text-lg font-semibold text-red-900 mb-2">
+                  Error Loading Pick Lists
+                </h3>
                 <p className="text-red-700 mb-4">{pickListsError}</p>
-                <Button onClick={handleRefresh} variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
+                <Button
+                  onClick={handleRefresh}
+                  variant="outline"
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Try Again
                 </Button>
@@ -146,14 +185,33 @@ const PickListsPage = () => {
                 <Package className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">Pick Lists</h1>
-                <p className="text-slate-500 text-sm">Manage and track your dispatch operations</p>
+                <h1 className="text-2xl font-bold text-slate-900">
+                  Pick Lists
+                </h1>
+                <p className="text-slate-500 text-sm">
+                  Manage and track your dispatch operations
+                </p>
               </div>
             </div>
-            <Button onClick={handleRefresh} variant="outline" className="gap-2">
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              <LastSyncBanner />
+
+              <Button
+                onClick={handleRefresh}
+                variant="outline"
+                className="gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </Button>
+              <Button
+            variant="outline"
+            onClick={handleLogout}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            Logout
+          </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -165,8 +223,12 @@ const PickListsPage = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-600 text-sm font-medium">Total Lists</p>
-                  <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+                  <p className="text-slate-600 text-sm font-medium">
+                    Total Lists
+                  </p>
+                  <p className="text-2xl font-bold text-slate-900">
+                    {stats.total}
+                  </p>
                 </div>
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Package className="w-5 h-5 text-blue-600" />
@@ -180,7 +242,9 @@ const PickListsPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-slate-600 text-sm font-medium">Pending</p>
-                  <p className="text-2xl font-bold text-orange-700">{stats.pending}</p>
+                  <p className="text-2xl font-bold text-orange-700">
+                    {stats.pending}
+                  </p>
                 </div>
                 <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                   <Clock className="w-5 h-5 text-orange-600" />
@@ -193,8 +257,12 @@ const PickListsPage = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-600 text-sm font-medium">Completed</p>
-                  <p className="text-2xl font-bold text-green-700">{stats.completed}</p>
+                  <p className="text-slate-600 text-sm font-medium">
+                    Completed
+                  </p>
+                  <p className="text-2xl font-bold text-green-700">
+                    {stats.completed}
+                  </p>
                 </div>
                 <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                   <CheckCircle className="w-5 h-5 text-green-600" />
@@ -208,7 +276,9 @@ const PickListsPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-slate-600 text-sm font-medium">Today</p>
-                  <p className="text-2xl font-bold text-purple-700">{additionalStats.today}</p>
+                  <p className="text-2xl font-bold text-purple-700">
+                    {additionalStats.today}
+                  </p>
                 </div>
                 <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                   <TrendingUp className="w-5 h-5 text-purple-600" />
@@ -233,24 +303,24 @@ const PickListsPage = () => {
               </div>
               <div className="flex gap-2">
                 <Button
-                  variant={statusFilter === 'pending' ? 'default' : 'outline'}
-                  onClick={() => handleStatusChange('pending')}
+                  variant={statusFilter === "pending" ? "default" : "outline"}
+                  onClick={() => handleStatusChange("pending")}
                   className="flex items-center gap-2"
                 >
                   <Clock className="w-4 h-4" />
                   Pending ({stats.pending})
                 </Button>
                 <Button
-                  variant={statusFilter === 'completed' ? 'default' : 'outline'}
-                  onClick={() => handleStatusChange('completed')}
+                  variant={statusFilter === "completed" ? "default" : "outline"}
+                  onClick={() => handleStatusChange("completed")}
                   className="flex items-center gap-2"
                 >
                   <CheckCircle className="w-4 h-4" />
                   Completed ({stats.completed})
                 </Button>
                 <Button
-                  variant={statusFilter === 'all' ? 'default' : 'outline'}
-                  onClick={() => handleStatusChange('all')}
+                  variant={statusFilter === "all" ? "default" : "outline"}
+                  onClick={() => handleStatusChange("all")}
                   className="flex items-center gap-2"
                 >
                   <Package className="w-4 h-4" />
@@ -281,9 +351,13 @@ const PickListsPage = () => {
             {filteredPickLists.length === 0 ? (
               <div className="text-center py-12">
                 <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No pick lists found</h3>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">
+                  No pick lists found
+                </h3>
                 <p className="text-slate-500">
-                  {searchTerm ? "Try adjusting your search terms" : "No pick lists available at the moment"}
+                  {searchTerm
+                    ? "Try adjusting your search terms"
+                    : "No pick lists available at the moment"}
                 </p>
               </div>
             ) : (
@@ -321,19 +395,24 @@ const PickListsPage = () => {
                           Assignee
                         </div>
                       </TableHead>
-                      <TableHead className="font-semibold text-slate-700">Remarks</TableHead>
+                      <TableHead className="font-semibold text-slate-700">
+                        Remarks
+                      </TableHead>
                       <TableHead className="font-semibold text-slate-700 w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredPickLists.map((pick) => (
-                      <TableRow 
-                        key={pick.PICK_LIST_ID} 
+                      <TableRow
+                        key={pick.PICK_LIST_ID}
                         onClick={() => handleRowClick(pick.PICK_LIST_ID)}
                         className="cursor-pointer hover:bg-blue-50/50 transition-all duration-200 border-slate-200/40 group"
                       >
                         <TableCell className="font-medium text-slate-900">
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          <Badge
+                            variant="outline"
+                            className="bg-blue-50 text-blue-700 border-blue-200"
+                          >
                             #{pick.PICK_LIST_ID}
                           </Badge>
                         </TableCell>
@@ -347,13 +426,19 @@ const PickListsPage = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {pick.status === 'completed' ? (
-                            <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+                          {pick.status === "completed" ? (
+                            <Badge
+                              variant="secondary"
+                              className="bg-green-100 text-green-700 border-green-200"
+                            >
                               <CheckCircle className="w-3 h-3 mr-1" />
                               Completed
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                            <Badge
+                              variant="outline"
+                              className="bg-orange-50 text-orange-700 border-orange-200"
+                            >
                               <Clock className="w-3 h-3 mr-1" />
                               Pending
                             </Badge>
@@ -373,7 +458,9 @@ const PickListsPage = () => {
                         </TableCell> */}
                         <TableCell className="text-slate-600 max-w-xs truncate">
                           {pick.REMARKS || (
-                            <span className="text-slate-400 italic">No remarks</span>
+                            <span className="text-slate-400 italic">
+                              No remarks
+                            </span>
                           )}
                         </TableCell>
                         <TableCell>

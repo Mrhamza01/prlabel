@@ -63,8 +63,7 @@ const LastSyncBanner = () => {
   const { syncInfo, printerInfo, isLoading, hasError, hasPrinterError } = state;
 
   return (
-    <div className="fixed top-4 right-4 z-100">
-      <div className="flex flex-col items-end gap-2">
+    <div className="flex gap-2">
         {/* Printer Status */}
         <Badge
           variant={hasPrinterError ? 'destructive' : 'secondary'}
@@ -99,7 +98,6 @@ const LastSyncBanner = () => {
             No sync data
           </Badge>
         )}
-      </div>
     </div>
   );
 };

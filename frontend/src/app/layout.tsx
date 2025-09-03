@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import LastSyncBanner from '@/components/Last-sync-banner';
 import { Toaster } from '@/components/ui/sonner';
+// import { Navbar } from '@/components/ui/navbar';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -29,9 +30,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <LastSyncBanner />
-        {children }
-        <Toaster  position="top-right" expand={true} closeButton richColors/>
+        <main className="min-h-screen flex flex-col bg-gray-50">
+          {/* <Navbar /> */}
+          {children}
+        </main>
+        <Toaster position="top-right" expand={true} closeButton richColors/>
       </body>
     </html>
   );
