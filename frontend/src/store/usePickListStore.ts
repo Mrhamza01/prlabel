@@ -1,3 +1,4 @@
+import { GLOBAL_ENTITY_ID } from "@/lib/constant";
 import { toast } from "sonner";
 import { create } from "zustand";
 
@@ -57,7 +58,7 @@ interface PickListStore {
   printedShipments: Set<string>; // Track which shipments have already been printed
 
   // Actions
-  fetchPickLists: (status?: string) => Promise<void>;
+  fetchPickLists: (status?: string, entityId?: Number | null) => Promise<void>;
   fetchPickListsStats: () => Promise<void>;
   fetchPickListLines: (pickListId: number) => Promise<void>;
   setSearchTerm: (term: string) => void;
@@ -113,12 +114,12 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
   printedShipments: new Set(),
 
   // Actions
-  fetchPickLists: async (status: string = "pending") => {
+  fetchPickLists: async (status: string = "pending", entityId?: Number | null) => {
     set({ pickListsLoading: true, pickListsError: null });
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/get-picklists?status=${status}`
+        `${API_BASE_URL}/api/get-picklists?status=${status}&entityId=${entityId}`
       );
 
       if (!response.ok) {

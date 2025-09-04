@@ -50,6 +50,7 @@ const PickListsPage = () => {
   }, [isAuthenticated, router]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("pending"); // Default to pending
+  const [entityId, setEntityId] = useState<number | null>(null);
 
   const {
     pickLists,
@@ -64,7 +65,7 @@ const PickListsPage = () => {
   } = usePickListStore();
 
   useEffect(() => {
-    fetchPickLists(statusFilter);
+    fetchPickLists(statusFilter, entityId);
     fetchPickListsStats();
     clearPickListLines();
     clearSearch();
@@ -74,6 +75,8 @@ const PickListsPage = () => {
     fetchPickListsStats,
     clearPickListLines,
     clearSearch,
+    entityId,
+    setEntityId,
   ]);
 
   const handleRowClick = (pickListId: number) => {
@@ -347,6 +350,10 @@ const PickListsPage = () => {
             <CardTitle className="text-lg font-semibold text-slate-900 flex items-center gap-2">
               <Package className="w-5 h-5" />
               Pick Lists ({filteredPickLists.length})
+
+              <Button onClick={(e) => {!entityId?setEntityId(Number(GLOBAL_ENTITY_ID)):setEntityId(null)}} >
+                Fetch my pick lists
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">

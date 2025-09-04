@@ -4,6 +4,7 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status') || 'pending'; // Default to pending
+        const entityId = searchParams.get('entityId');
 
         let query = `
             SELECT DISTINCT 
@@ -27,8 +28,14 @@ export async function GET(request: Request) {
                 END as status
             FROM PICK_LIST pl
             LEFT JOIN PICK_LIST_LINES pll ON pl.PICK_LIST_ID = pll.PICK_LIST_ID
-            GROUP BY pl.PICK_LIST_ID, pl.ORDER_NUMBER, pl.ORDER_DATE, pl.ASSIGNEE_ID, pl.REMARKS, pl.PACKING_PERSON
         `;
+
+        // Add filter for entityId if provided
+        if (entityId && entityId!== 'null') {
+            query += ` WHERE pl.PACKING_PERSON = '${entityId}'`;
+        }
+
+        query += ` GROUP BY pl.PICK_LIST_ID, pl.ORDER_NUMBER, pl.ORDER_DATE, pl.ASSIGNEE_ID, pl.REMARKS, pl.PACKING_PERSON`;
 
         // Add status filter based on the requested status
         if (status === 'pending') {
