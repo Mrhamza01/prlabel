@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     pll.QUANTITY,
     ss.SHIPMENT_NUMBER,
     ss.SERVICE_CODE,
+    ss.SHIPMENT_STATUS,
     store.STORE_ID,
     store.STORE_NAME,
     sp.SKU AS PRODUCT_SKU,
