@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -30,6 +30,7 @@ import {
 import { format } from "date-fns";
 import { usePickListStore } from "@/store/usePickListStore";
 import LastSyncBanner from "@/components/Last-sync-banner";
+import { GLOBAL_ENTITY_ID } from "@/lib/constant";
 
 const PickListsPage = () => {
   const router = useRouter();
@@ -44,7 +45,7 @@ const PickListsPage = () => {
   // }));
   useEffect(() => {
     if (!isAuthenticated) {
-      router.replace('/login');
+      router.replace("/login");
     }
   }, [isAuthenticated, router]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,6 +60,7 @@ const PickListsPage = () => {
     fetchPickListsStats,
     clearPickListLines,
     clearSearch,
+    setPackingPerson,
   } = usePickListStore();
 
   useEffect(() => {
@@ -115,9 +117,9 @@ const PickListsPage = () => {
     }).length,
   };
 
-   const handleLogout = () => {
+  const handleLogout = () => {
     logout();
-    router.replace('/login');
+    router.replace("/login");
   };
 
   if (!isAuthenticated) return null;
@@ -205,12 +207,12 @@ const PickListsPage = () => {
                 Refresh
               </Button>
               <Button
-            variant="outline"
-            onClick={handleLogout}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-          >
-            Logout
-          </Button>
+                variant="outline"
+                onClick={handleLogout}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                Logout
+              </Button>
             </div>
           </div>
         </div>
@@ -465,6 +467,29 @@ const PickListsPage = () => {
                         </TableCell>
                         <TableCell>
                           <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-200" />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="secondary"
+                            className="bg-blue-100 text-blue-700 border-blue-200 disabled:bg-gray-400 disabled:text-white"
+                            disabled={Number(pick.PACKING_PERSON) === Number(GLOBAL_ENTITY_ID)}
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              // Assign to me logic here
+                              await setPackingPerson(
+                                pick.PICK_LIST_ID,
+                                GLOBAL_ENTITY_ID
+                              );
+                              // Refresh the picklists after assignment
+                              // await fetchPickLists(statusFilter);
+                              console.log(
+                                `Assigning pick list ${pick.PICK_LIST_ID} to ${GLOBAL_ENTITY_ID}`
+                              );
+                            }}
+                          >
+                            <User className="w-3 h-3 mr-1" />
+                            Assign To Me
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}

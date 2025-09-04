@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, Printer, ArrowLeft, Calendar, FileText, Package, AlertTriangle, Copy, ChevronDown, ChevronRight } from 'lucide-react';
 import { usePickListStore } from '@/store/usePickListStore';
 import { toast } from 'sonner';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const PickListLinesContent = () => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,6 +50,14 @@ const PickListLinesContent = () => {
     handleGroupPrint,
   } = usePickListStore();
 
+
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+   
+    useEffect(() => {
+      if (!isAuthenticated) {
+        router.replace("/login");
+      }
+    }, [isAuthenticated, router]);
   // fetch data
   useEffect(() => {
     if (!pickListId) return;

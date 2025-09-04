@@ -11,6 +11,7 @@ export async function GET(request: Request) {
                 pl.ORDER_NUMBER,
                 pl.ORDER_DATE,
                 pl.ASSIGNEE_ID,
+                pl.PACKING_PERSON,
                 pl.REMARKS,
                 CASE 
                     WHEN COUNT(CASE 
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
                 END as status
             FROM PICK_LIST pl
             LEFT JOIN PICK_LIST_LINES pll ON pl.PICK_LIST_ID = pll.PICK_LIST_ID
-            GROUP BY pl.PICK_LIST_ID, pl.ORDER_NUMBER, pl.ORDER_DATE, pl.ASSIGNEE_ID, pl.REMARKS
+            GROUP BY pl.PICK_LIST_ID, pl.ORDER_NUMBER, pl.ORDER_DATE, pl.ASSIGNEE_ID, pl.REMARKS, pl.PACKING_PERSON
         `;
 
         // Add status filter based on the requested status
@@ -64,6 +65,7 @@ export async function GET(request: Request) {
             ORDER_DATE: pick.ORDER_DATE,
             ASSIGNEE_ID: pick.ASSIGNEE_ID,
             REMARKS: pick.REMARKS,
+            PACKING_PERSON: pick.PACKING_PERSON,
             status: pick.STATUS || pick.status // Handle both uppercase and lowercase
         }));
         
