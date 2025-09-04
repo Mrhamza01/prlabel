@@ -40,13 +40,11 @@ const PickListLinesContent = () => {
     setSearchTerm,
     setMatchedUPC,
     executeSearch,
-    handlePrint,
-    handleManualPrint,
+    // handleManualPrint,
     clearSearch,
     getFilteredLines,
     getAllItemsCompleted,
     getCurrentPickList,
-    setLoadingShipmentId,
     handleGroupPrint,
   } = usePickListStore();
 
@@ -101,14 +99,14 @@ const PickListLinesContent = () => {
   }, []);
 
   // Handle group print - update all lines but print only the main line
-  const handleGroupPrintClick = async (shipmentId: string, lines: any[]) => {
+  const handleGroupPrintClick = async (shipmentId: string, lines: any[], labelprinted: boolean) => {
     try {
       // Extract pick list line IDs from the lines
       const pickListLineIds = lines.map(line => parseInt(line.PICK_LIST_LINES_ID));
       
       // Use the store's group print function
-      const success = await handleGroupPrint(shipmentId, pickListLineIds);
-      
+      const success = await handleGroupPrint(shipmentId, pickListLineIds, labelprinted);
+
       if (success) {
         toast.success(`✅ Labels printed successfully for shipment ${shipmentId} (${lines.length} items)!`);
       } else {
@@ -120,14 +118,14 @@ const PickListLinesContent = () => {
     }
   };
 
-  const handlePrintClick = async (shipmentId: string, pickListLineId: string) => {
-    const success = await handleManualPrint(shipmentId, parseInt(pickListLineId));
-    if (success) {
-      toast.info(`✅ Print request sent for shipment ${shipmentId}`);
-    } else {
-      toast.error(`❌ Failed to print shipment ${shipmentId}`);
-    }
-  };
+  // const handlePrintClick = async (shipmentId: string, pickListLineId: string) => {
+  //   const success = await handleManualPrint(shipmentId, parseInt(pickListLineId));
+  //   if (success) {
+  //     toast.info(`✅ Print request sent for shipment ${shipmentId}`);
+  //   } else {
+  //     toast.error(`❌ Failed to print shipment ${shipmentId}`);
+  //   }
+  // };
 
   const handleGoBack = () => {
     router.push('/pick-lists');
@@ -536,16 +534,23 @@ const PickListLinesContent = () => {
                           <Button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleGroupPrintClick(summaryLine.SHIPMENT_ID, lines);
+                              if(summaryLine.SHIPMENT_STATUS === 'label_purchased') {
+                                handleGroupPrintClick(summaryLine.SHIPMENT_ID, lines, true);
+                              }else{
+                                handleGroupPrintClick(summaryLine.SHIPMENT_ID, lines, false);
+                              }
                             }}
                             disabled={loadingShipmentId === summaryLine.SHIPMENT_ID}
                             variant={summaryChecked ? 'default' : 'secondary'}
                             className="flex items-center gap-2"
                           >
                             <Printer className="w-4 h-4" />
-                            {loadingShipmentId === summaryLine.SHIPMENT_ID
+                            {/* {loadingShipmentId === summaryLine.SHIPMENT_ID
                               ? 'Printing...'
-                              : 'Print'}
+                              : 'Print'} */}
+                              {
+                              loadingShipmentId === summaryLine.SHIPMENT_ID? 'Printing...' : summaryLine.SHIPMENT_STATUS === 'label_purchased' ? 'Label Purchased' : 'Print'
+                              }
                           </Button>
                           {hasMultipleLines && (
                             <div className="text-xs text-gray-500">

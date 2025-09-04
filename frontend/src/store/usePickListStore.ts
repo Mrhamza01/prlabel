@@ -19,6 +19,7 @@ interface PickListLine {
   SHIPMENT_ID: string;
   SHIPMENT_NUMBER: string;
   SERVICE_CODE: string | null;
+  SHIPMENT_STATUS: string | null;
   STORE_ID: number | null;
   STORE_NAME: string | null;
   PRODUCT_SKU: string | null;
@@ -82,7 +83,8 @@ interface PickListStore {
   setLoadingShipmentId: (shipmentId: string | null) => void; // Set loading state
   handleGroupPrint: (
     shipmentId: string,
-    pickListLineIds: number[]
+    pickListLineIds: number[],
+    labelprinted: boolean
   ) => Promise<boolean>; // Group print with update all lines
 }
 
@@ -114,7 +116,10 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
   printedShipments: new Set(),
 
   // Actions
-  fetchPickLists: async (status: string = "pending", entityId?: Number | null) => {
+  fetchPickLists: async (
+    status: string = "pending",
+    entityId?: Number | null
+  ) => {
     set({ pickListsLoading: true, pickListsError: null });
 
     try {
@@ -615,22 +620,25 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
       }
 
       set((state) => {
-         // Update both pickLists and pickListLines
-      const updatedPickLists = state.pickLists.map((pick) =>
-        pick.PICK_LIST_ID === picklistid
-          ? { ...pick, PACKING_PERSON: packingPerson }
-          : pick
-      );
-      const updatedPickListLines = state.pickListLines.map((line) =>
-        line.PICK_LIST_ID === picklistid
-          ? { ...line, PACKING_PERSON: packingPerson }
-          : line
-      );
-      toast.success("Pick list assigned successfully");
-      return { pickLists: updatedPickLists, pickListLines: updatedPickListLines };
-    });
-  } catch (error) {
-    console.error("Print error:", error);
+        // Update both pickLists and pickListLines
+        const updatedPickLists = state.pickLists.map((pick) =>
+          pick.PICK_LIST_ID === picklistid
+            ? { ...pick, PACKING_PERSON: packingPerson }
+            : pick
+        );
+        const updatedPickListLines = state.pickListLines.map((line) =>
+          line.PICK_LIST_ID === picklistid
+            ? { ...line, PACKING_PERSON: packingPerson }
+            : line
+        );
+        toast.success("Pick list assigned successfully");
+        return {
+          pickLists: updatedPickLists,
+          pickListLines: updatedPickListLines,
+        };
+      });
+    } catch (error) {
+      console.error("Print error:", error);
     }
   },
 
@@ -847,7 +855,8 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
   // Handle group print - update all lines in a group but print only once
   handleGroupPrint: async (
     shipmentId: string,
-    pickListLineIds: number[]
+    pickListLineIds: number[],
+    labelprinted: boolean
   ): Promise<boolean> => {
     const { checkedItems, printedShipments } = get();
 
@@ -906,18 +915,34 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
       } else {
         console.log("Group print: All items already checked, only printing");
       }
+      if (labelprinted) {
+        console.log("Group print: Label already printed, only printing");
+        // Now proceed with printing (single print call for the whole group)
+        const printResponse = await fetch(`${PRINTER_BASE_URL}/print`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ shipmentId }),
+        });
 
-      // Now proceed with printing (single print call for the whole group)
-      const printResponse = await fetch(`${PRINTER_BASE_URL}/print`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shipmentId }),
-      });
+        if (!printResponse.ok) {
+          throw new Error(`Print request failed: ${printResponse.statusText}`);
+        }
+      } else {
+        console.log("Group print: Label not printed, generating new label");
 
-      if (!printResponse.ok) {
-        throw new Error(`Print request failed: ${printResponse.statusText}`);
+        const printResponse = await fetch(
+          `${PRINTER_BASE_URL}/generate-and-print`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ shipmentId }),
+          }
+        );
+
+        if (!printResponse.ok) {
+          throw new Error(`Print request failed: ${printResponse.statusText}`);
+        }
       }
-
       console.log(
         "Group print: Print request successful for shipment:",
         shipmentId
