@@ -30,7 +30,7 @@ import {
 import { format } from "date-fns";
 import { usePickListStore } from "@/store/usePickListStore";
 import LastSyncBanner from "@/components/Last-sync-banner";
-import { GLOBAL_ENTITY_ID } from "@/lib/constant";
+import { GLOBAL_ENTITY_ID, GLOBAL_ENTITY_NAME } from "@/lib/constant";
 
 const PickListsPage = () => {
   const router = useRouter();
@@ -350,10 +350,21 @@ const PickListsPage = () => {
             <CardTitle className="text-lg font-semibold text-slate-900 flex items-center gap-2">
               <Package className="w-5 h-5" />
               Pick Lists ({filteredPickLists.length})
-
-              <Button onClick={(e) => {!entityId?setEntityId(Number(GLOBAL_ENTITY_ID)):setEntityId(null)}} >
+              <Button
+                onClick={(e) => {
+                  !entityId
+                    ? setEntityId(Number(GLOBAL_ENTITY_ID))
+                    : setEntityId(null);
+                }}
+              >
                 Fetch my pick lists
               </Button>
+              <div className="flex items-baseline gap-2 text-xl">
+                <span className="text-slate-500">Hello,</span>
+                <span className="font-semibold text-gray-900">
+                  {GLOBAL_ENTITY_NAME}
+                </span>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -405,6 +416,12 @@ const PickListsPage = () => {
                         </div>
                       </TableHead>
                       <TableHead className="font-semibold text-slate-700">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          Packaging Person
+                        </div>
+                      </TableHead>
+                      <TableHead className="font-semibold text-slate-700">
                         Remarks
                       </TableHead>
                       <TableHead className="font-semibold text-slate-700 w-12"></TableHead>
@@ -453,18 +470,42 @@ const PickListsPage = () => {
                             </Badge>
                           )}
                         </TableCell>
-                        {/* <TableCell>
+                        <TableCell>
                           {pick.ASSIGNEE_ID ? (
-                            <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
+                            <Badge
+                              variant="secondary"
+                              className="bg-blue-100 text-blue-700 border-blue-200"
+                            >
                               <User className="w-3 h-3 mr-1" />
-                              {pick.ASSIGNEE_ID}
+                              {pick.ASSIGNEE_NAME}
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                            <Badge
+                              variant="outline"
+                              className="bg-gray-50 text-gray-700 border-gray-200"
+                            >
                               Unassigned
                             </Badge>
                           )}
-                        </TableCell> */}
+                        </TableCell>
+                        <TableCell>
+                          {pick.PACKING_PERSON_NAME ? (
+                            <Badge
+                              variant="secondary"
+                              className="bg-green-100 text-green-700 border-green-200"
+                            >
+                              <User className="w-3 h-3 mr-1" />
+                              {pick.PACKING_PERSON_NAME}
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="bg-gray-50 text-gray-700 border-gray-200"
+                            >
+                              Unassigned
+                            </Badge>
+                          )}
+                        </TableCell>
                         <TableCell className="text-slate-600 max-w-xs truncate">
                           {pick.REMARKS || (
                             <span className="text-slate-400 italic">
@@ -479,13 +520,14 @@ const PickListsPage = () => {
                           <Button
                             variant="secondary"
                             className="bg-blue-100 text-blue-700 border-blue-200 disabled:bg-gray-400 disabled:text-white"
-                            disabled={Number(pick.PACKING_PERSON) === Number(GLOBAL_ENTITY_ID)}
+                            disabled={!!pick.PACKING_PERSON_NAME || pick.PACKING_PERSON === GLOBAL_ENTITY_ID}
                             onClick={async (e) => {
                               e.stopPropagation();
                               // Assign to me logic here
                               await setPackingPerson(
                                 pick.PICK_LIST_ID,
-                                GLOBAL_ENTITY_ID
+                                GLOBAL_ENTITY_ID,
+                                GLOBAL_ENTITY_NAME
                               );
                               // Refresh the picklists after assignment
                               // await fetchPickLists(statusFilter);

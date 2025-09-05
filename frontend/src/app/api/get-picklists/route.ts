@@ -13,6 +13,8 @@ export async function GET(request: Request) {
                 pl.ORDER_DATE,
                 pl.ASSIGNEE_ID,
                 pl.PACKING_PERSON,
+                ent.NAME AS PACKING_PERSON_NAME,
+                e.NAME AS ASSIGNEE_NAME,
                 pl.REMARKS,
                 CASE 
                     WHEN COUNT(CASE 
@@ -28,6 +30,8 @@ export async function GET(request: Request) {
                 END as status
             FROM PICK_LIST pl
             LEFT JOIN PICK_LIST_LINES pll ON pl.PICK_LIST_ID = pll.PICK_LIST_ID
+            LEFT JOIN EMPLOYEES e ON pl.ASSIGNEE_ID = e.EMPLOYEE_ID
+            LEFT JOIN ENTITY ent ON pl.PACKING_PERSON = ent.ENTITY_ID
         `;
 
         // Add filter for entityId if provided
@@ -35,7 +39,7 @@ export async function GET(request: Request) {
             query += ` WHERE pl.PACKING_PERSON = '${entityId}'`;
         }
 
-        query += ` GROUP BY pl.PICK_LIST_ID, pl.ORDER_NUMBER, pl.ORDER_DATE, pl.ASSIGNEE_ID, pl.REMARKS, pl.PACKING_PERSON`;
+        query += ` GROUP BY pl.PICK_LIST_ID, pl.ORDER_NUMBER, pl.ORDER_DATE, pl.ASSIGNEE_ID, pl.REMARKS, pl.PACKING_PERSON , ent.NAME, e.NAME`;
 
         // Add status filter based on the requested status
         if (status === 'pending') {
@@ -71,6 +75,8 @@ export async function GET(request: Request) {
             ORDER_NUMBER: pick.ORDER_NUMBER,
             ORDER_DATE: pick.ORDER_DATE,
             ASSIGNEE_ID: pick.ASSIGNEE_ID,
+            PACKING_PERSON_NAME: pick.PACKING_PERSON_NAME,
+            ASSIGNEE_NAME: pick.ASSIGNEE_NAME,
             REMARKS: pick.REMARKS,
             PACKING_PERSON: pick.PACKING_PERSON,
             status: pick.STATUS || pick.status // Handle both uppercase and lowercase

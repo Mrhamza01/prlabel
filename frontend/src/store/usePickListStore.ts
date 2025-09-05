@@ -8,6 +8,8 @@ interface PickList {
   ORDER_NUMBER: string;
   ORDER_DATE: string;
   ASSIGNEE_ID: number | null;
+  ASSIGNEE_NAME: string | null;
+  PACKING_PERSON_NAME: string | null;
   REMARKS: string | null;
   status: "pending" | "completed";
   PACKING_PERSON: string | null;
@@ -73,7 +75,8 @@ interface PickListStore {
   clearPickListLines: () => void;
   clearSearch: () => void;
   checkNextItem: (upc: string) => Promise<void>;
-  setPackingPerson: (picklistid: Number, packingPerson: string | null) => void;
+  setPackingPerson: (picklistid: Number, packingPerson: string | null , packingPersonName?: string | null
+  ) => void;
 
   // Computed properties
   getFilteredLines: () => PickListLine[];
@@ -603,7 +606,8 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
   },
   setPackingPerson: async (
     picklistid: Number,
-    packingPerson: string | null
+    packingPerson: string | null,
+    packingPersonName: string | null = null
   ) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/assign-picklist`, {
@@ -623,12 +627,12 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
         // Update both pickLists and pickListLines
         const updatedPickLists = state.pickLists.map((pick) =>
           pick.PICK_LIST_ID === picklistid
-            ? { ...pick, PACKING_PERSON: packingPerson }
+            ? { ...pick, PACKING_PERSON: packingPerson, PACKING_PERSON_NAME: packingPersonName }
             : pick
         );
         const updatedPickListLines = state.pickListLines.map((line) =>
           line.PICK_LIST_ID === picklistid
-            ? { ...line, PACKING_PERSON: packingPerson }
+            ? { ...line, PACKING_PERSON: packingPerson, PACKING_PERSON_NAME: packingPersonName }
             : line
         );
         toast.success("Pick list assigned successfully");
@@ -916,6 +920,7 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
         console.log("Group print: All items already checked, only printing");
       }
       if (labelprinted) {
+        
         console.log("Group print: Label already printed, only printing");
         // Now proceed with printing (single print call for the whole group)
         const printResponse = await fetch(`${PRINTER_BASE_URL}/print`, {
