@@ -513,6 +513,51 @@ const PickListsPage = () => {
                           )}
                         </TableCell>
                         <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {/* Total Orders + Label */}
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-lg font-semibold text-slate-900">
+                                {pick.total_Orders}
+                              </span>
+                              <span className="text-sm text-slate-400">
+                                total orders
+                              </span>
+                            </div>
+
+                            {/* Progress Bar */}
+                            {(() => {
+                              const percentage =
+                                (pick?.total_Orders ?? 0) > 0
+                                  ? Math.round(
+                                      ((pick?.shipped_order ?? 0) /
+                                        (pick?.total_Orders ?? 1)) *
+                                        100
+                                    )
+                                  : 0;
+
+                              return (
+                                <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                  <div
+                                    className={`bg-indigo-500 h-2 rounded-full transition-all`}
+                                    style={{ width: `${percentage}%` }}
+                                  />
+                                </div>
+                              );
+                            })()}
+
+                            {/* Shipped vs Pending */}
+                            <div className="flex justify-between text-xs text-slate-500 mt-1">
+                              <span>{pick.shipped_order} shipped </span>
+                              <span>
+                                {Number(pick.total_Orders) -
+                                  Number(pick.shipped_order)}{" "}
+                                pending
+                              </span>
+                            </div>
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
                           {Number(pick.PACKING_PERSON) ===
                           Number(GLOBAL_ENTITY_ID) ? (
                             <ArrowRight
