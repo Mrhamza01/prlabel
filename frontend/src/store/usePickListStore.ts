@@ -10,9 +10,12 @@ interface PickList {
   ASSIGNEE_ID: number | null;
   ASSIGNEE_NAME: string | null;
   PACKING_PERSON_NAME: string | null;
+  shipped_order: number | null;
+  total_Orders: number | null;
   REMARKS: string | null;
   status: "pending" | "completed";
   PACKING_PERSON: string | null;
+
 }
 
 interface PickListLine {
