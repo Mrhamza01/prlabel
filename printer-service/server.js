@@ -114,8 +114,8 @@ app.post("/print", async (req, res) => {
   }
 });
 
-app.post("/generate-and-print", async (req, res) => {
-  const shipmentId = req.body.shipmentId || "se-939039759";
+app.get("/generate-and-print", async (req, res) => {
+  const shipmentId = req.query.shipmentId;
 
   if (!shipmentId) {
     return res.status(400).json({
@@ -128,22 +128,24 @@ app.post("/generate-and-print", async (req, res) => {
     console.log("📦 Fetching label for shipment:", shipmentId);
 
     const response = await axios.post(
-      `https://api.shipstation.com/v2/labels/`,
+      `https://api.shipstation.com/v2/labels/shipment/${shipmentId}`,
       {
-        shipment_id: shipmentId,
+        validate_address: "no_validation",
+        label_layout: "4x6",
+        label_format: "pdf",
+        label_download_type: "url",
+        display_scheme: "label",
       },
       {
         headers: {
-          "api-key": API_KEY,
           "Content-Type": "application/json",
+          "api-key": API_KEY, // replace with your actual key
         },
       }
     );
 
-    const labelData = response.data;
-    const label = labelData?.labels?.[0];
-    const pdfUrl = label?.label_download?.pdf;
-
+    const pdfUrl = response.data.label_download.pdf;
+    console.log(pdfUrl);
     if (!pdfUrl) {
       throw new Error("❌ No PDF URL found for this shipment");
     }
