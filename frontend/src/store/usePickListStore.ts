@@ -69,11 +69,11 @@ interface PickListStore {
   setSearchTerm: (term: string) => void;
   executeSearch: (term: string) => Promise<void>; // New action for when search is "executed"
   setMatchedUPC: (upc: string | null) => void;
-  handlePrint: (shipmentId: string) => Promise<boolean>;
-  handleManualPrint: (
-    shipmentId: string,
-    pickListLinesId: number
-  ) => Promise<boolean>; // Manual print with conditional update
+  // handlePrint: (shipmentId: string) => Promise<boolean>;
+  // handleManualPrint: (
+  //   shipmentId: string,
+  //   pickListLinesId: number
+  // ) => Promise<boolean>; // Manual print with conditional update
   clearPickListLines: () => void;
   clearSearch: () => void;
   checkNextItem: (upc: string) => Promise<void>;
@@ -415,7 +415,7 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
         // Handle printing after state updates
         if (shipmentToPrint) {
           console.log("Triggering print for SHIPMENT_ID:", shipmentToPrint);
-          const printSuccess = await get().handlePrint(shipmentToPrint);
+          const printSuccess = await get().handleGroupPrint(shipmentToPrint, [nextUnchecked.PICK_LIST_LINES_ID], false);
           if (printSuccess) {
             console.log(
               "Print job sent successfully for SHIPMENT_ID:",
@@ -567,7 +567,7 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
             "Triggering print for SHIPMENT_ID (reset):",
             shipmentToPrint
           );
-          const printSuccess = await get().handlePrint(shipmentToPrint);
+          const printSuccess = await get().handleGroupPrint(shipmentToPrint, [firstLine.PICK_LIST_LINES_ID], true);
           if (printSuccess) {
             console.log(
               "Print job sent successfully for SHIPMENT_ID (reset):",
@@ -673,126 +673,126 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
     set({ matchedUPC: upc });
   },
 
-  handlePrint: async (shipmentId: string): Promise<boolean> => {
-    set({ loadingShipmentId: shipmentId });
+  // handlePrint: async (shipmentId: string): Promise<boolean> => {
+  //   set({ loadingShipmentId: shipmentId });
 
-    try {
-      const response = await fetch(`${PRINTER_BASE_URL}/print`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shipmentId }),
-      });
+  //   try {
+  //     const response = await fetch(`${PRINTER_BASE_URL}/print`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ shipmentId }),
+  //     });
 
-      if (!response.ok) {
-        throw new Error(`Print request failed: ${response.statusText}`);
-      }
+  //     if (!response.ok) {
+  //       throw new Error(`Print request failed: ${response.statusText}`);
+  //     }
 
-      set({ loadingShipmentId: null });
-      return true;
-    } catch (error) {
-      console.error("Print error:", error);
-      set({ loadingShipmentId: null });
-      return false;
-    }
-  },
+  //     set({ loadingShipmentId: null });
+  //     return true;
+  //   } catch (error) {
+  //     console.error("Print error:", error);
+  //     set({ loadingShipmentId: null });
+  //     return false;
+  //   }
+  // },
 
-  handleManualPrint: async (
-    shipmentId: string,
-    pickListLinesId: number
-  ): Promise<boolean> => {
-    const { checkedItems, pickListLines, printedShipments } = get();
+  // handleManualPrint: async (
+  //   shipmentId: string,
+  //   pickListLinesId: number
+  // ): Promise<boolean> => {
+  //   const { checkedItems, pickListLines, printedShipments } = get();
 
-    set({ loadingShipmentId: shipmentId });
+  //   set({ loadingShipmentId: shipmentId });
 
-    try {
-      const isAlreadyChecked = checkedItems.has(pickListLinesId);
+  //   try {
+  //     const isAlreadyChecked = checkedItems.has(pickListLinesId);
 
-      // Find the line to check for duplicates
-      const currentLine = pickListLines.find(
-        (line) => line.PICK_LIST_LINES_ID === pickListLinesId
-      );
+  //     // Find the line to check for duplicates
+  //     const currentLine = pickListLines.find(
+  //       (line) => line.PICK_LIST_LINES_ID === pickListLinesId
+  //     );
 
-      if (!currentLine) {
-        throw new Error("Pick list line not found");
-      }
+  //     if (!currentLine) {
+  //       throw new Error("Pick list line not found");
+  //     }
 
-      // Check for duplicate SHIPMENT_NUMBERs
-      const shipmentCounts = pickListLines.reduce((acc, line) => {
-        acc[line.SHIPMENT_NUMBER] = (acc[line.SHIPMENT_NUMBER] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+  //     // Check for duplicate SHIPMENT_NUMBERs
+  //     const shipmentCounts = pickListLines.reduce((acc, line) => {
+  //       acc[line.SHIPMENT_NUMBER] = (acc[line.SHIPMENT_NUMBER] || 0) + 1;
+  //       return acc;
+  //     }, {} as Record<string, number>);
 
-      const hasDuplicateShipment =
-        shipmentCounts[currentLine.SHIPMENT_NUMBER] > 1;
+  //     const hasDuplicateShipment =
+  //       shipmentCounts[currentLine.SHIPMENT_NUMBER] > 1;
 
-      // If not checked and no duplicate, update first
-      if (!isAlreadyChecked && !hasDuplicateShipment) {
-        console.log(
-          "Manual print: Updating shipment before printing:",
-          shipmentId
-        );
+  //     // If not checked and no duplicate, update first
+  //     if (!isAlreadyChecked && !hasDuplicateShipment) {
+  //       console.log(
+  //         "Manual print: Updating shipment before printing:",
+  //         shipmentId
+  //       );
 
-        const updateResponse = await fetch(
-          `${API_BASE_URL}/api/update-picklist-lines?SHIPMENT_ID=${shipmentId}`
-        );
+  //       const updateResponse = await fetch(
+  //         `${API_BASE_URL}/api/update-picklist-lines?SHIPMENT_ID=${shipmentId}`
+  //       );
 
-        if (!updateResponse.ok) {
-          throw new Error(
-            `Update API call failed: ${updateResponse.status} ${updateResponse.statusText}`
-          );
-        }
+  //       if (!updateResponse.ok) {
+  //         throw new Error(
+  //           `Update API call failed: ${updateResponse.status} ${updateResponse.statusText}`
+  //         );
+  //       }
 
-        const updateResult = await updateResponse.json();
-        console.log("Manual print update API response:", updateResult);
+  //       const updateResult = await updateResponse.json();
+  //       console.log("Manual print update API response:", updateResult);
 
-        if (updateResult.success === false) {
-          throw new Error(
-            updateResult.error || "Update API returned failure status"
-          );
-        }
+  //       if (updateResult.success === false) {
+  //         throw new Error(
+  //           updateResult.error || "Update API returned failure status"
+  //         );
+  //       }
 
-        // Mark the item as checked after successful update
-        const newCheckedItems = new Set<number>(checkedItems);
-        newCheckedItems.add(pickListLinesId);
+  //       // Mark the item as checked after successful update
+  //       const newCheckedItems = new Set<number>(checkedItems);
+  //       newCheckedItems.add(pickListLinesId);
 
-        // Update printed shipments
-        const newPrintedShipments = new Set([...printedShipments, shipmentId]);
+  //       // Update printed shipments
+  //       const newPrintedShipments = new Set([...printedShipments, shipmentId]);
 
-        set({
-          checkedItems: newCheckedItems,
-          printedShipments: newPrintedShipments,
-        });
+  //       set({
+  //         checkedItems: newCheckedItems,
+  //         printedShipments: newPrintedShipments,
+  //       });
 
-        console.log("Manual print: Item updated and marked as checked");
-      } else if (isAlreadyChecked) {
-        console.log("Manual print: Item already checked, only printing");
-      } else if (hasDuplicateShipment) {
-        console.log("Manual print: Duplicate shipment detected, only printing");
-      }
+  //       console.log("Manual print: Item updated and marked as checked");
+  //     } else if (isAlreadyChecked) {
+  //       console.log("Manual print: Item already checked, only printing");
+  //     } else if (hasDuplicateShipment) {
+  //       console.log("Manual print: Duplicate shipment detected, only printing");
+  //     }
 
-      // Now proceed with printing
-      const printResponse = await fetch(`${PRINTER_BASE_URL}/print`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shipmentId }),
-      });
+  //     // Now proceed with printing
+  //     const printResponse = await fetch(`${PRINTER_BASE_URL}/print`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ shipmentId }),
+  //     });
 
-      if (!printResponse.ok) {
-        throw new Error(`Print request failed: ${printResponse.statusText}`);
-      }
+  //     if (!printResponse.ok) {
+  //       throw new Error(`Print request failed: ${printResponse.statusText}`);
+  //     }
 
-      console.log(
-        "Manual print: Print request successful for shipment:",
-        shipmentId
-      );
-      set({ loadingShipmentId: null });
-      return true;
-    } catch (error) {
-      console.error("Manual print error:", error);
-      set({ loadingShipmentId: null });
-      return false;
-    }
-  },
+  //     console.log(
+  //       "Manual print: Print request successful for shipment:",
+  //       shipmentId
+  //     );
+  //     set({ loadingShipmentId: null });
+  //     return true;
+  //   } catch (error) {
+  //     console.error("Manual print error:", error);
+  //     set({ loadingShipmentId: null });
+  //     return false;
+  //   }
+  // },
 
   clearPickListLines: () => {
     set({
@@ -943,7 +943,7 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
         console.log("Group print: All items already checked, only printing");
       }
       if (labelprinted) {
-        console.log("Group print: Label already printed, only printing");
+        console.log("Group print:  only printing");
         // Now proceed with printing (single print call for the whole group)
         const printResponse = await fetch(`${PRINTER_BASE_URL}/print`, {
           method: "POST",
@@ -955,7 +955,7 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
           throw new Error(`Print request failed: ${printResponse.statusText}`);
         }
       } else {
-        console.log("Group print: Label not printed, generating new label");
+        console.log("Group print: generating new label");
 
         const printResponse = await fetch(
           `${PRINTER_BASE_URL}/generate-and-print`,
@@ -970,10 +970,10 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
           throw new Error(`Print request failed: ${printResponse.statusText}`);
         }
       }
-      console.log(
-        "Group print: Print request successful for shipment:",
-        shipmentId
-      );
+      // console.log(
+      //   "Group print: Print request successful for shipment:",
+      //   shipmentId
+      // );
       set({ loadingShipmentId: null });
       return true;
     } catch (error) {
