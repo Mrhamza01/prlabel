@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { shallow } from 'zustand/shallow';
 import { StateCreator } from 'zustand';
-
+import { usePickListStore } from './usePickListStore';
 interface AuthState {
   isAuthenticated: boolean;
   entityId: string | null;
@@ -24,20 +24,28 @@ const createAuthSlice: StateCreator<
   entityId: null,
   username: null,
   entityType: null,
-  login: (userData: { entity_id: string; username: string; entity_type: string }) =>
+  login: (userData: { entity_id: string; username: string; entity_type: string }) => {
     set({
       isAuthenticated: true,
       entityId: userData.entity_id,
       username: userData.username,
       entityType: userData.entity_type,
-    }),
-  logout: () =>
-    set({
-      isAuthenticated: false,
-      entityId: null,
-      username: null,
-      entityType: null,
-    }),
+    });
+      window.location.reload();
+
+  },
+  logout: async() => {
+  const { resetPickList } = usePickListStore.getState();
+  await resetPickList();
+  window.location.reload();
+  set({
+    isAuthenticated: false,
+    entityId: null,
+    username: null,
+    entityType: null,
+  });
+}
+    
 });
 
 export const useAuthStore = create<AuthStore>()(

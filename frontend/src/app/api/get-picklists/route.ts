@@ -36,7 +36,6 @@ export async function GET(request: Request) {
     // For 'all', no additional HAVING clause needed
 
     const picklists = await db.query(query);
-    console.log("Fetched pick lists:", (picklists ?? [])[0]);
     // Map the response to convert uppercase field names to lowercase to match frontend interface
     const mappedPicklists = (picklists || []).map((pick: any) => ({
       PICK_LIST_ID: pick.PICK_LIST_ID,
