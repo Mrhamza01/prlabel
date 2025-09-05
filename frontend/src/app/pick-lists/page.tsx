@@ -431,7 +431,6 @@ const PickListsPage = () => {
                     {filteredPickLists.map((pick) => (
                       <TableRow
                         key={pick.PICK_LIST_ID}
-                        onClick={() => handleRowClick(pick.PICK_LIST_ID)}
                         className="cursor-pointer hover:bg-blue-50/50 transition-all duration-200 border-slate-200/40 group"
                       >
                         <TableCell className="font-medium text-slate-900">
@@ -516,7 +515,10 @@ const PickListsPage = () => {
                         <TableCell>
                           {Number(pick.PACKING_PERSON) ===
                           Number(GLOBAL_ENTITY_ID) ? (
-                            <ArrowRight className=" w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-200" />
+                            <ArrowRight
+                              onClick={() => handleRowClick(pick.PICK_LIST_ID)}
+                              className=" w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-200"
+                            />
                           ) : null}
                         </TableCell>
                         <TableCell>
