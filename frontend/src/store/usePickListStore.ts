@@ -348,7 +348,7 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
           return;
         }
 
-        const apiCallKey = `${nextUnchecked.SHIPMENT_ID}-${Date.now()}`;
+        // const apiCallKey = `${nextUnchecked.SHIPMENT_ID}-${Date.now()}`;
 
         // Prevent duplicate API calls for the same shipment
         if (get().lastApiCall === nextUnchecked.SHIPMENT_ID) {
@@ -367,23 +367,7 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
         );
         set({ lastApiCall: nextUnchecked.SHIPMENT_ID });
 
-        const response = await fetch(
-          `${API_BASE_URL}/api/update-picklist-lines?SHIPMENT_ID=${nextUnchecked.SHIPMENT_ID}`
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            `API call failed: ${response.status} ${response.statusText}`
-          );
-        }
-
-        const result = await response.json();
-        console.log("API response:", result);
-
-        // Check if the API response indicates success
-        if (result.success === false) {
-          throw new Error(result.error || "API returned failure status");
-        }
+        
 
         // Determine if we should print (before state updates)
         const shouldPrint = !printedShipments.has(nextUnchecked.SHIPMENT_ID);
@@ -417,6 +401,23 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
           console.log("Triggering print for SHIPMENT_ID:", shipmentToPrint);
           const printSuccess = await get().handleGroupPrint(shipmentToPrint, [nextUnchecked.PICK_LIST_LINES_ID], false);
           if (printSuccess) {
+            const response = await fetch(
+          `${API_BASE_URL}/api/update-picklist-lines?SHIPMENT_ID=${nextUnchecked.SHIPMENT_ID}`
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `API call failed: ${response.status} ${response.statusText}`
+          );
+        }
+
+        const result = await response.json();
+        console.log("API response:", result);
+
+        // Check if the API response indicates success
+        if (result.success === false) {
+          throw new Error(result.error || "API returned failure status");
+        }
             console.log(
               "Print job sent successfully for SHIPMENT_ID:",
               shipmentToPrint
@@ -517,23 +518,23 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
         );
         set({ lastApiCall: firstLine.SHIPMENT_ID });
 
-        const response = await fetch(
-          `${API_BASE_URL}/api/update-picklist-lines?SHIPMENT_ID=${firstLine.SHIPMENT_ID}`
-        );
+        // const response = await fetch(
+        //   `${API_BASE_URL}/api/update-picklist-lines?SHIPMENT_ID=${firstLine.SHIPMENT_ID}`
+        // );
 
-        if (!response.ok) {
-          throw new Error(
-            `API call failed: ${response.status} ${response.statusText}`
-          );
-        }
+        // if (!response.ok) {
+        //   throw new Error(
+        //     `API call failed: ${response.status} ${response.statusText}`
+        //   );
+        // }
 
-        const result = await response.json();
-        console.log("API response for reset:", result);
+        // const result = await response.json();
+        // console.log("API response for reset:", result);
 
-        // Check if the API response indicates success
-        if (result.success === false) {
-          throw new Error(result.error || "API returned failure status");
-        }
+        // // Check if the API response indicates success
+        // if (result.success === false) {
+        //   throw new Error(result.error || "API returned failure status");
+        // }
 
         // Determine if we should print (before state updates)
         const shouldPrint = !printedShipments.has(firstLine.SHIPMENT_ID);
@@ -562,36 +563,36 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
         });
 
         // Handle printing after state updates
-        if (shipmentToPrint) {
-          console.log(
-            "Triggering print for SHIPMENT_ID (reset):",
-            shipmentToPrint
-          );
-          const printSuccess = await get().handleGroupPrint(shipmentToPrint, [firstLine.PICK_LIST_LINES_ID], true);
-          if (printSuccess) {
-            console.log(
-              "Print job sent successfully for SHIPMENT_ID (reset):",
-              shipmentToPrint
-            );
-          } else {
-            console.error(
-              "Print job failed for SHIPMENT_ID (reset):",
-              shipmentToPrint
-            );
-            // Remove from printed shipments if print failed
-            const currentState = get();
-            const updatedPrintedShipments = new Set(
-              currentState.printedShipments
-            );
-            updatedPrintedShipments.delete(shipmentToPrint);
-            set({ printedShipments: updatedPrintedShipments });
-          }
-        } else {
-          console.log(
-            "Shipment already printed, skipping print for SHIPMENT_ID (reset):",
-            firstLine.SHIPMENT_ID
-          );
-        }
+        // if (shipmentToPrint) {
+        //   console.log(
+        //     "Triggering print for SHIPMENT_ID (reset):",
+        //     shipmentToPrint
+        //   );
+        //   const printSuccess = await get().handleGroupPrint(shipmentToPrint, [firstLine.PICK_LIST_LINES_ID], true);
+        //   if (printSuccess) {
+        //     console.log(
+        //       "Print job sent successfully for SHIPMENT_ID (reset):",
+        //       shipmentToPrint
+        //     );
+        //   } else {
+        //     console.error(
+        //       "Print job failed for SHIPMENT_ID (reset):",
+        //       shipmentToPrint
+        //     );
+        //     // Remove from printed shipments if print failed
+        //     const currentState = get();
+        //     const updatedPrintedShipments = new Set(
+        //       currentState.printedShipments
+        //     );
+        //     updatedPrintedShipments.delete(shipmentToPrint);
+        //     set({ printedShipments: updatedPrintedShipments });
+        //   }
+        // } else {
+        //   console.log(
+        //     "Shipment already printed, skipping print for SHIPMENT_ID (reset):",
+        //     firstLine.SHIPMENT_ID
+        //   );
+        // }
       }
     } catch (error) {
       console.error("Failed to update picklist line:", error);
@@ -891,9 +892,9 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
 
     try {
       // Check if any lines are already checked
-      const hasCheckedLines = pickListLineIds.some((id) =>
-        checkedItems.has(id)
-      );
+      // const hasCheckedLines = pickListLineIds.some((id) =>
+      //   checkedItems.has(id)
+      // );
       const allLinesChecked = pickListLineIds.every((id) =>
         checkedItems.has(id)
       );
