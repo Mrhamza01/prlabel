@@ -514,13 +514,19 @@ const PickListsPage = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-200" />
+                          {Number(pick.PACKING_PERSON) ===
+                          Number(GLOBAL_ENTITY_ID) ? (
+                            <ArrowRight className=" w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-200" />
+                          ) : null}
                         </TableCell>
                         <TableCell>
                           <Button
                             variant="secondary"
                             className="bg-blue-100 text-blue-700 border-blue-200 disabled:bg-gray-400 disabled:text-white"
-                            disabled={!!pick.PACKING_PERSON_NAME || pick.PACKING_PERSON === GLOBAL_ENTITY_ID}
+                            disabled={
+                              !!pick.PACKING_PERSON_NAME ||
+                              pick.PACKING_PERSON === GLOBAL_ENTITY_ID
+                            }
                             onClick={async (e) => {
                               e.stopPropagation();
                               // Assign to me logic here
