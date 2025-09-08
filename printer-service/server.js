@@ -115,7 +115,7 @@ app.post("/print", async (req, res) => {
 });
 
 app.post("/generate-and-print", async (req, res) => {
-  const shipmentId = req.query.shipmentId;
+  const shipmentId = req.body.shipmentId;
 
   if (!shipmentId) {
     return res.status(400).json({

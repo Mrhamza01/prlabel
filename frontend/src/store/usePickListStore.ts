@@ -276,6 +276,340 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
     await get().checkNextItem(trimmedTerm);
   },
 
+  // checkNextItem: async (upc: string) => {
+  //   const { pickListLines, checkedItems, printedShipments } = get();
+
+  //   console.log("=== checkNextItem START ===");
+  //   console.log("checkNextItem called with UPC:", upc);
+  //   console.log("Current checked items:", Array.from(checkedItems));
+  //   console.log("Current printed shipments:", Array.from(printedShipments));
+
+  //   // Set loading state
+  //   set({ isCheckingItem: true });
+
+  //   try {
+  //     // Find all matching lines for this UPC (exact match only)
+  //     const matchingLines = pickListLines.filter(
+  //       (line) => line.UPC?.toLowerCase() === upc.toLowerCase()
+  //     );
+
+  //     console.log("Matching lines found:", matchingLines.length);
+
+  //     if (matchingLines.length === 0) {
+  //       set({ matchedUPC: null, isCheckingItem: false });
+  //       return;
+  //     }
+
+  //     // Find the FIRST unchecked item with this UPC
+  //     const nextUnchecked = matchingLines.find(
+  //       (line) => !checkedItems.has(line.PICK_LIST_LINES_ID)
+  //     );
+
+  //     console.log("Next unchecked item:", nextUnchecked?.PICK_LIST_LINES_ID);
+
+  //     if (nextUnchecked) {
+  //       // Check for duplicate SHIPMENT_NUMBERs
+  //       const shipmentCounts = pickListLines.reduce((acc, line) => {
+  //         acc[line.SHIPMENT_NUMBER] = (acc[line.SHIPMENT_NUMBER] || 0) + 1;
+  //         return acc;
+  //       }, {} as Record<string, number>);
+
+  //       const hasDuplicateShipment =
+  //         shipmentCounts[nextUnchecked.SHIPMENT_NUMBER] > 1;
+
+  //       if (hasDuplicateShipment) {
+  //         console.log(
+  //           "Skipping operation: Duplicate SHIPMENT_NUMBER detected:",
+  //           nextUnchecked.SHIPMENT_NUMBER
+  //         );
+  //         set({
+  //           matchedUPC: nextUnchecked.UPC,
+  //           isCheckingItem: false,
+  //         });
+  //         // Show alert to user about duplicate shipment
+  //         toast.warning(
+  //           `⚠️ Cannot scan/update: Multiple items found with shipment number ${nextUnchecked.SHIPMENT_NUMBER}. Printing is still allowed.`
+  //         );
+  //         return;
+  //       }
+
+  //       // Condition 1: Skip operation if SHIPPED_QTY equals QUANTITY and item is already checked
+  //       if (
+  //         nextUnchecked.SHIPPED_QTY !== null &&
+  //         nextUnchecked.QUANTITY !== null &&
+  //         nextUnchecked.SHIPPED_QTY === nextUnchecked.QUANTITY &&
+  //         checkedItems.has(nextUnchecked.PICK_LIST_LINES_ID)
+  //       ) {
+  //         console.log("Skipping operation: Item already completed and checked");
+  //         set({
+  //           matchedUPC: nextUnchecked.UPC,
+  //           isCheckingItem: false,
+  //         });
+  //         return;
+  //       }
+
+  //       // const apiCallKey = `${nextUnchecked.SHIPMENT_ID}-${Date.now()}`;
+
+  //       // Prevent duplicate API calls for the same shipment
+  //       if (get().lastApiCall === nextUnchecked.SHIPMENT_ID) {
+  //         console.log(
+  //           "Duplicate API call prevented for SHIPMENT_ID:",
+  //           nextUnchecked.SHIPMENT_ID
+  //         );
+  //         set({ isCheckingItem: false });
+  //         return;
+  //       }
+
+  //       // Call the API to update the picklist line before marking as checked
+  //       console.log(
+  //         "Calling API to update SHIPMENT_ID:",
+  //         nextUnchecked.SHIPMENT_ID
+  //       );
+  //       set({ lastApiCall: nextUnchecked.SHIPMENT_ID });
+
+  //       // Determine if we should print (before state updates)
+  //       const shouldPrint = !printedShipments.has(nextUnchecked.SHIPMENT_ID);
+  //       const shipmentToPrint = shouldPrint ? nextUnchecked.SHIPMENT_ID : null;
+
+  //       // API call successful - now mark the item as checked
+  //       const newCheckedItems = new Set<number>(checkedItems);
+  //       newCheckedItems.add(nextUnchecked.PICK_LIST_LINES_ID);
+
+  //       console.log(
+  //         "Adding to checked items:",
+  //         nextUnchecked.PICK_LIST_LINES_ID
+  //       );
+  //       console.log("New checked items will be:", Array.from(newCheckedItems));
+
+  //       // Update printed shipments if we're going to print
+  //       const newPrintedShipments = shouldPrint
+  //         ? new Set([...printedShipments, nextUnchecked.SHIPMENT_ID])
+  //         : printedShipments;
+
+  //       // Handle printing after state updates
+  //       if (shipmentToPrint) {
+  //         console.log("Triggering print for SHIPMENT_ID:", shipmentToPrint);
+  //         const printSuccess = await get().handleGroupPrint(
+  //           shipmentToPrint,
+  //           [nextUnchecked.PICK_LIST_LINES_ID],
+  //           false
+  //         );
+  //         if (printSuccess) {
+  //           set({
+  //             checkedItems: newCheckedItems,
+  //             matchedUPC: nextUnchecked.UPC,
+  //             isCheckingItem: false,
+  //             lastApiCall: null, // Reset after successful completion
+  //             printedShipments: newPrintedShipments,
+  //           });
+  //         }
+
+  //         //   if (printSuccess) {
+  //         //     const response = await fetch(
+  //         //   `${API_BASE_URL}/api/update-picklist-lines?SHIPMENT_ID=${nextUnchecked.SHIPMENT_ID}`
+  //         // );
+
+  //         // if (!response.ok) {
+  //         //   throw new Error(
+  //         //     `API call failed: ${response.status} ${response.statusText}`
+  //         //   );
+  //         // }
+
+  //         // const result = await response.json();
+  //         // console.log("API response:", result);
+
+  //         // // Check if the API response indicates success
+  //         // if (result.success === false) {
+  //         //   throw new Error(result.error || "API returned failure status");
+  //         // }
+  //         //     console.log(
+  //         //       "Print job sent successfully for SHIPMENT_ID:",
+  //         //       shipmentToPrint
+  //         //     );
+  //         //   } else {
+  //         //     console.error("Print job failed for SHIPMENT_ID:", shipmentToPrint);
+  //         //     // Remove from printed shipments if print failed
+  //         //     const currentState = get();
+  //         //     const updatedPrintedShipments = new Set(
+  //         //       currentState.printedShipments
+  //         //     );
+  //         //     updatedPrintedShipments.delete(shipmentToPrint);
+  //         //     set({ printedShipments: updatedPrintedShipments });
+  //         //   }
+  //       }
+  //     } else {
+  //       // All items with this UPC are already checked
+  //       console.log("All items with this UPC are already checked");
+
+  //       // Check if ALL matching lines are already checked
+  //       const allChecked = matchingLines.every((line) =>
+  //         checkedItems.has(line.PICK_LIST_LINES_ID)
+  //       );
+
+  //       if (allChecked) {
+  //         console.log("All UPC items are completed - showing error message");
+  //         set({
+  //           matchedUPC: upc,
+  //           isCheckingItem: false,
+  //         });
+  //         toast.error(`❌ All items with UPC ${upc} are already completed!`);
+  //         return;
+  //       }
+
+  //       // If we reach here, something went wrong - fallback to first line
+  //       const firstLine = matchingLines[0];
+
+  //       // Check for duplicate SHIPMENT_NUMBERs
+  //       const shipmentCounts = pickListLines.reduce((acc, line) => {
+  //         acc[line.SHIPMENT_NUMBER] = (acc[line.SHIPMENT_NUMBER] || 0) + 1;
+  //         return acc;
+  //       }, {} as Record<string, number>);
+
+  //       const hasDuplicateShipment =
+  //         shipmentCounts[firstLine.SHIPMENT_NUMBER] > 1;
+
+  //       if (hasDuplicateShipment) {
+  //         console.log(
+  //           "Skipping reset operation: Duplicate SHIPMENT_NUMBER detected:",
+  //           firstLine.SHIPMENT_NUMBER
+  //         );
+  //         set({
+  //           matchedUPC: firstLine.UPC,
+  //           isCheckingItem: false,
+  //         });
+  //         // Show alert to user about duplicate shipment
+  //         toast.warning(
+  //           `⚠️ Cannot scan/update: Multiple items found with shipment number ${firstLine.SHIPMENT_NUMBER}. Printing is still allowed.`
+  //         );
+  //         return;
+  //       }
+
+  //       // Condition 1: Skip operation if SHIPPED_QTY equals QUANTITY and item is already checked
+  //       if (
+  //         firstLine.SHIPPED_QTY !== null &&
+  //         firstLine.QUANTITY !== null &&
+  //         firstLine.SHIPPED_QTY === firstLine.QUANTITY &&
+  //         checkedItems.has(firstLine.PICK_LIST_LINES_ID)
+  //       ) {
+  //         console.log(
+  //           "Skipping reset operation: Item already completed and checked"
+  //         );
+  //         set({
+  //           matchedUPC: firstLine.UPC,
+  //           isCheckingItem: false,
+  //         });
+  //         return;
+  //       }
+
+  //       // Prevent duplicate API calls for the same shipment
+  //       if (get().lastApiCall === firstLine.SHIPMENT_ID) {
+  //         console.log(
+  //           "Duplicate API call prevented for SHIPMENT_ID (reset):",
+  //           firstLine.SHIPMENT_ID
+  //         );
+  //         set({ isCheckingItem: false });
+  //         return;
+  //       }
+
+  //       console.log(
+  //         "All checked, resetting. Calling API for SHIPMENT_ID:",
+  //         firstLine.SHIPMENT_ID
+  //       );
+  //       set({ lastApiCall: firstLine.SHIPMENT_ID });
+
+  //       // const response = await fetch(
+  //       //   `${API_BASE_URL}/api/update-picklist-lines?SHIPMENT_ID=${firstLine.SHIPMENT_ID}`
+  //       // );
+
+  //       // if (!response.ok) {
+  //       //   throw new Error(
+  //       //     `API call failed: ${response.status} ${response.statusText}`
+  //       //   );
+  //       // }
+
+  //       // const result = await response.json();
+  //       // console.log("API response for reset:", result);
+
+  //       // // Check if the API response indicates success
+  //       // if (result.success === false) {
+  //       //   throw new Error(result.error || "API returned failure status");
+  //       // }
+
+  //       // Determine if we should print (before state updates)
+  //       const shouldPrint = !printedShipments.has(firstLine.SHIPMENT_ID);
+  //       const shipmentToPrint = shouldPrint ? firstLine.SHIPMENT_ID : null;
+
+  //       // API call successful - reset and mark first item
+  //       const newCheckedItems = new Set<number>();
+  //       newCheckedItems.add(firstLine.PICK_LIST_LINES_ID);
+
+  //       console.log(
+  //         "All checked, resetting. New checked item:",
+  //         firstLine.PICK_LIST_LINES_ID
+  //       );
+
+  //       // Update printed shipments if we're going to print
+  //       const newPrintedShipments = shouldPrint
+  //         ? new Set([...printedShipments, firstLine.SHIPMENT_ID])
+  //         : printedShipments;
+
+  //       set({
+  //         checkedItems: newCheckedItems,
+  //         matchedUPC: firstLine.UPC,
+  //         isCheckingItem: false,
+  //         lastApiCall: null, // Reset after successful completion
+  //         printedShipments: newPrintedShipments,
+  //       });
+
+  //       // Handle printing after state updates
+  //       // if (shipmentToPrint) {
+  //       //   console.log(
+  //       //     "Triggering print for SHIPMENT_ID (reset):",
+  //       //     shipmentToPrint
+  //       //   );
+  //       //   const printSuccess = await get().handleGroupPrint(shipmentToPrint, [firstLine.PICK_LIST_LINES_ID], true);
+  //       //   if (printSuccess) {
+  //       //     console.log(
+  //       //       "Print job sent successfully for SHIPMENT_ID (reset):",
+  //       //       shipmentToPrint
+  //       //     );
+  //       //   } else {
+  //       //     console.error(
+  //       //       "Print job failed for SHIPMENT_ID (reset):",
+  //       //       shipmentToPrint
+  //       //     );
+  //       //     // Remove from printed shipments if print failed
+  //       //     const currentState = get();
+  //       //     const updatedPrintedShipments = new Set(
+  //       //       currentState.printedShipments
+  //       //     );
+  //       //     updatedPrintedShipments.delete(shipmentToPrint);
+  //       //     set({ printedShipments: updatedPrintedShipments });
+  //       //   }
+  //       // } else {
+  //       //   console.log(
+  //       //     "Shipment already printed, skipping print for SHIPMENT_ID (reset):",
+  //       //     firstLine.SHIPMENT_ID
+  //       //   );
+  //       // }
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to update picklist line:", error);
+  //     // Don't mark the item as checked if API call fails
+  //     set({
+  //       isCheckingItem: false,
+  //       lastApiCall: null, // Reset on error
+  //     });
+  //     toast.error(
+  //       `❌ Failed to update shipment: ${
+  //         error instanceof Error ? error.message : "Unknown error"
+  //       }`
+  //     );
+  //   }
+
+  //   console.log("=== checkNextItem END ===");
+  // },
+
   checkNextItem: async (upc: string) => {
     const { pickListLines, checkedItems, printedShipments } = get();
 
@@ -288,7 +622,7 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
     set({ isCheckingItem: true });
 
     try {
-      // Find all matching lines for this UPC (exact match only)
+      // Find all matching lines for this UPC
       const matchingLines = pickListLines.filter(
         (line) => line.UPC?.toLowerCase() === upc.toLowerCase()
       );
@@ -300,7 +634,7 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
         return;
       }
 
-      // Find the FIRST unchecked item with this UPC
+      // Find the first unchecked item with this UPC
       const nextUnchecked = matchingLines.find(
         (line) => !checkedItems.has(line.PICK_LIST_LINES_ID)
       );
@@ -308,298 +642,15 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
       console.log("Next unchecked item:", nextUnchecked?.PICK_LIST_LINES_ID);
 
       if (nextUnchecked) {
-        // Check for duplicate SHIPMENT_NUMBERs
-        const shipmentCounts = pickListLines.reduce((acc, line) => {
-          acc[line.SHIPMENT_NUMBER] = (acc[line.SHIPMENT_NUMBER] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-
-        const hasDuplicateShipment =
-          shipmentCounts[nextUnchecked.SHIPMENT_NUMBER] > 1;
-
-        if (hasDuplicateShipment) {
-          console.log(
-            "Skipping operation: Duplicate SHIPMENT_NUMBER detected:",
-            nextUnchecked.SHIPMENT_NUMBER
-          );
-          set({
-            matchedUPC: nextUnchecked.UPC,
-            isCheckingItem: false,
-          });
-          // Show alert to user about duplicate shipment
-          toast.warning(
-            `⚠️ Cannot scan/update: Multiple items found with shipment number ${nextUnchecked.SHIPMENT_NUMBER}. Printing is still allowed.`
-          );
-          return;
-        }
-
-        // Condition 1: Skip operation if SHIPPED_QTY equals QUANTITY and item is already checked
-        if (
-          nextUnchecked.SHIPPED_QTY !== null &&
-          nextUnchecked.QUANTITY !== null &&
-          nextUnchecked.SHIPPED_QTY === nextUnchecked.QUANTITY &&
-          checkedItems.has(nextUnchecked.PICK_LIST_LINES_ID)
-        ) {
-          console.log("Skipping operation: Item already completed and checked");
-          set({
-            matchedUPC: nextUnchecked.UPC,
-            isCheckingItem: false,
-          });
-          return;
-        }
-
-        // const apiCallKey = `${nextUnchecked.SHIPMENT_ID}-${Date.now()}`;
-
-        // Prevent duplicate API calls for the same shipment
-        if (get().lastApiCall === nextUnchecked.SHIPMENT_ID) {
-          console.log(
-            "Duplicate API call prevented for SHIPMENT_ID:",
-            nextUnchecked.SHIPMENT_ID
-          );
-          set({ isCheckingItem: false });
-          return;
-        }
-
-        // Call the API to update the picklist line before marking as checked
-        console.log(
-          "Calling API to update SHIPMENT_ID:",
-          nextUnchecked.SHIPMENT_ID
-        );
-        set({ lastApiCall: nextUnchecked.SHIPMENT_ID });
-
-        
-
-        // Determine if we should print (before state updates)
-        const shouldPrint = !printedShipments.has(nextUnchecked.SHIPMENT_ID);
-        const shipmentToPrint = shouldPrint ? nextUnchecked.SHIPMENT_ID : null;
-
-        // API call successful - now mark the item as checked
-        const newCheckedItems = new Set<number>(checkedItems);
-        newCheckedItems.add(nextUnchecked.PICK_LIST_LINES_ID);
-
-        console.log(
-          "Adding to checked items:",
-          nextUnchecked.PICK_LIST_LINES_ID
-        );
-        console.log("New checked items will be:", Array.from(newCheckedItems));
-
-        // Update printed shipments if we're going to print
-        const newPrintedShipments = shouldPrint
-          ? new Set([...printedShipments, nextUnchecked.SHIPMENT_ID])
-          : printedShipments;
-
-        set({
-          checkedItems: newCheckedItems,
-          matchedUPC: nextUnchecked.UPC,
-          isCheckingItem: false,
-          lastApiCall: null, // Reset after successful completion
-          printedShipments: newPrintedShipments,
-        });
-
-        // Handle printing after state updates
-        if (shipmentToPrint) {
-          console.log("Triggering print for SHIPMENT_ID:", shipmentToPrint);
-          const printSuccess = await get().handleGroupPrint(shipmentToPrint, [nextUnchecked.PICK_LIST_LINES_ID], false);
-          if (printSuccess) {
-            const response = await fetch(
-          `${API_BASE_URL}/api/update-picklist-lines?SHIPMENT_ID=${nextUnchecked.SHIPMENT_ID}`
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            `API call failed: ${response.status} ${response.statusText}`
-          );
-        }
-
-        const result = await response.json();
-        console.log("API response:", result);
-
-        // Check if the API response indicates success
-        if (result.success === false) {
-          throw new Error(result.error || "API returned failure status");
-        }
-            console.log(
-              "Print job sent successfully for SHIPMENT_ID:",
-              shipmentToPrint
-            );
-          } else {
-            console.error("Print job failed for SHIPMENT_ID:", shipmentToPrint);
-            // Remove from printed shipments if print failed
-            const currentState = get();
-            const updatedPrintedShipments = new Set(
-              currentState.printedShipments
-            );
-            updatedPrintedShipments.delete(shipmentToPrint);
-            set({ printedShipments: updatedPrintedShipments });
-          }
-        } else {
-          console.log(
-            "Shipment already printed, skipping print for SHIPMENT_ID:",
-            nextUnchecked.SHIPMENT_ID
-          );
-        }
+        await handleUncheckedItem(nextUnchecked, upc);
       } else {
-        // All items with this UPC are already checked
-        console.log("All items with this UPC are already checked");
-
-        // Check if ALL matching lines are already checked
-        const allChecked = matchingLines.every((line) =>
-          checkedItems.has(line.PICK_LIST_LINES_ID)
-        );
-
-        if (allChecked) {
-          console.log("All UPC items are completed - showing error message");
-          set({
-            matchedUPC: upc,
-            isCheckingItem: false,
-          });
-          toast.error(`❌ All items with UPC ${upc} are already completed!`);
-          return;
-        }
-
-        // If we reach here, something went wrong - fallback to first line
-        const firstLine = matchingLines[0];
-
-        // Check for duplicate SHIPMENT_NUMBERs
-        const shipmentCounts = pickListLines.reduce((acc, line) => {
-          acc[line.SHIPMENT_NUMBER] = (acc[line.SHIPMENT_NUMBER] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-
-        const hasDuplicateShipment =
-          shipmentCounts[firstLine.SHIPMENT_NUMBER] > 1;
-
-        if (hasDuplicateShipment) {
-          console.log(
-            "Skipping reset operation: Duplicate SHIPMENT_NUMBER detected:",
-            firstLine.SHIPMENT_NUMBER
-          );
-          set({
-            matchedUPC: firstLine.UPC,
-            isCheckingItem: false,
-          });
-          // Show alert to user about duplicate shipment
-          toast.warning(
-            `⚠️ Cannot scan/update: Multiple items found with shipment number ${firstLine.SHIPMENT_NUMBER}. Printing is still allowed.`
-          );
-          return;
-        }
-
-        // Condition 1: Skip operation if SHIPPED_QTY equals QUANTITY and item is already checked
-        if (
-          firstLine.SHIPPED_QTY !== null &&
-          firstLine.QUANTITY !== null &&
-          firstLine.SHIPPED_QTY === firstLine.QUANTITY &&
-          checkedItems.has(firstLine.PICK_LIST_LINES_ID)
-        ) {
-          console.log(
-            "Skipping reset operation: Item already completed and checked"
-          );
-          set({
-            matchedUPC: firstLine.UPC,
-            isCheckingItem: false,
-          });
-          return;
-        }
-
-        // Prevent duplicate API calls for the same shipment
-        if (get().lastApiCall === firstLine.SHIPMENT_ID) {
-          console.log(
-            "Duplicate API call prevented for SHIPMENT_ID (reset):",
-            firstLine.SHIPMENT_ID
-          );
-          set({ isCheckingItem: false });
-          return;
-        }
-
-        console.log(
-          "All checked, resetting. Calling API for SHIPMENT_ID:",
-          firstLine.SHIPMENT_ID
-        );
-        set({ lastApiCall: firstLine.SHIPMENT_ID });
-
-        // const response = await fetch(
-        //   `${API_BASE_URL}/api/update-picklist-lines?SHIPMENT_ID=${firstLine.SHIPMENT_ID}`
-        // );
-
-        // if (!response.ok) {
-        //   throw new Error(
-        //     `API call failed: ${response.status} ${response.statusText}`
-        //   );
-        // }
-
-        // const result = await response.json();
-        // console.log("API response for reset:", result);
-
-        // // Check if the API response indicates success
-        // if (result.success === false) {
-        //   throw new Error(result.error || "API returned failure status");
-        // }
-
-        // Determine if we should print (before state updates)
-        const shouldPrint = !printedShipments.has(firstLine.SHIPMENT_ID);
-        const shipmentToPrint = shouldPrint ? firstLine.SHIPMENT_ID : null;
-
-        // API call successful - reset and mark first item
-        const newCheckedItems = new Set<number>();
-        newCheckedItems.add(firstLine.PICK_LIST_LINES_ID);
-
-        console.log(
-          "All checked, resetting. New checked item:",
-          firstLine.PICK_LIST_LINES_ID
-        );
-
-        // Update printed shipments if we're going to print
-        const newPrintedShipments = shouldPrint
-          ? new Set([...printedShipments, firstLine.SHIPMENT_ID])
-          : printedShipments;
-
-        set({
-          checkedItems: newCheckedItems,
-          matchedUPC: firstLine.UPC,
-          isCheckingItem: false,
-          lastApiCall: null, // Reset after successful completion
-          printedShipments: newPrintedShipments,
-        });
-
-        // Handle printing after state updates
-        // if (shipmentToPrint) {
-        //   console.log(
-        //     "Triggering print for SHIPMENT_ID (reset):",
-        //     shipmentToPrint
-        //   );
-        //   const printSuccess = await get().handleGroupPrint(shipmentToPrint, [firstLine.PICK_LIST_LINES_ID], true);
-        //   if (printSuccess) {
-        //     console.log(
-        //       "Print job sent successfully for SHIPMENT_ID (reset):",
-        //       shipmentToPrint
-        //     );
-        //   } else {
-        //     console.error(
-        //       "Print job failed for SHIPMENT_ID (reset):",
-        //       shipmentToPrint
-        //     );
-        //     // Remove from printed shipments if print failed
-        //     const currentState = get();
-        //     const updatedPrintedShipments = new Set(
-        //       currentState.printedShipments
-        //     );
-        //     updatedPrintedShipments.delete(shipmentToPrint);
-        //     set({ printedShipments: updatedPrintedShipments });
-        //   }
-        // } else {
-        //   console.log(
-        //     "Shipment already printed, skipping print for SHIPMENT_ID (reset):",
-        //     firstLine.SHIPMENT_ID
-        //   );
-        // }
+        await handleAllItemsChecked(matchingLines, upc);
       }
     } catch (error) {
       console.error("Failed to update picklist line:", error);
-      // Don't mark the item as checked if API call fails
       set({
         isCheckingItem: false,
-        lastApiCall: null, // Reset on error
+        lastApiCall: null,
       });
       toast.error(
         `❌ Failed to update shipment: ${
@@ -609,7 +660,205 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
     }
 
     console.log("=== checkNextItem END ===");
+
+    // Helper function to handle unchecked items
+    async function handleUncheckedItem(item: any, upc: string) {
+      // Validate item conditions
+      const validationResult = validateItemForProcessing(item);
+      if (!validationResult.isValid) {
+        set({
+          matchedUPC: validationResult.matchedUPC || upc,
+          isCheckingItem: false,
+        });
+        if (validationResult.showToast) {
+          toast.warning(validationResult.message!);
+        }
+        return;
+      }
+
+      // Prevent duplicate API calls
+      if (get().lastApiCall === item.SHIPMENT_ID) {
+        console.log(
+          "Duplicate API call prevented for SHIPMENT_ID:",
+          item.SHIPMENT_ID
+        );
+        set({ isCheckingItem: false });
+        return;
+      }
+
+      console.log("Calling API to update SHIPMENT_ID:", item.SHIPMENT_ID);
+      set({ lastApiCall: item.SHIPMENT_ID });
+
+      // Determine print requirements before state changes
+      const shouldPrint = !printedShipments.has(item.SHIPMENT_ID);
+
+      // Prepare new state values
+      const newCheckedItems = new Set<number>(checkedItems);
+      newCheckedItems.add(item.PICK_LIST_LINES_ID);
+
+      const newPrintedShipments = shouldPrint
+        ? new Set([...printedShipments, item.SHIPMENT_ID])
+        : printedShipments;
+
+      console.log("Adding to checked items:", item.PICK_LIST_LINES_ID);
+      console.log("New checked items will be:", Array.from(newCheckedItems));
+
+      // Handle printing if required
+      let printSuccess = false;
+      if (shouldPrint) {
+        console.log("Triggering print for SHIPMENT_ID:", item.SHIPMENT_ID);
+        printSuccess = await get().handleGroupPrint(
+          item.SHIPMENT_ID,
+          [item.PICK_LIST_LINES_ID],
+          false
+        );
+      }
+      console.log("Print success status:", printSuccess);
+      // Update all state at once
+      if (printSuccess == true) {
+        set({
+          checkedItems: newCheckedItems,
+          matchedUPC: item.UPC,
+          isCheckingItem: false,
+          lastApiCall: null,
+          printedShipments: newPrintedShipments,
+        });
+      } else {
+        // If print failed, don't update printed shipments
+        // set({
+        //   checkedItems: newCheckedItems,
+        //   matchedUPC: item.UPC,
+        //   isCheckingItem: false,
+        //   lastApiCall: null,
+        // });
+        
+        set({ isCheckingItem: false, lastApiCall: null });
+        toast.error(`❌ Print job failed for shipment ${item.SHIPMENT_ID}. Please try again.`);
+      }
+    }
+
+    // Helper function to handle when all items are checked
+    async function handleAllItemsChecked(matchingLines: any[], upc: string) {
+      // Check if ALL matching lines are already checked
+      const allChecked = matchingLines.every((line) =>
+        checkedItems.has(line.PICK_LIST_LINES_ID)
+      );
+
+      if (allChecked) {
+        console.log("All UPC items are completed - showing error message");
+        set({
+          matchedUPC: upc,
+          isCheckingItem: false,
+        });
+        toast.error(`❌ All items with UPC ${upc} are already completed!`);
+        return;
+      }
+
+      // Reset logic - use first line
+      const firstLine = matchingLines[0];
+
+      // Validate first line for processing
+      const validationResult = validateItemForProcessing(firstLine);
+      if (!validationResult.isValid) {
+        set({
+          matchedUPC: validationResult.matchedUPC || firstLine.UPC,
+          isCheckingItem: false,
+        });
+        if (validationResult.showToast) {
+          toast.warning(validationResult.message!);
+        }
+        return;
+      }
+
+      // Prevent duplicate API calls
+      if (get().lastApiCall === firstLine.SHIPMENT_ID) {
+        console.log(
+          "Duplicate API call prevented for SHIPMENT_ID (reset):",
+          firstLine.SHIPMENT_ID
+        );
+        set({ isCheckingItem: false });
+        return;
+      }
+
+      console.log(
+        "All checked, resetting. Calling API for SHIPMENT_ID:",
+        firstLine.SHIPMENT_ID
+      );
+      set({ lastApiCall: firstLine.SHIPMENT_ID });
+
+      // Determine print requirements before state changes
+      const shouldPrint = !printedShipments.has(firstLine.SHIPMENT_ID);
+
+      // Prepare new state values (reset checked items)
+      const newCheckedItems = new Set<number>();
+      newCheckedItems.add(firstLine.PICK_LIST_LINES_ID);
+
+      const newPrintedShipments = shouldPrint
+        ? new Set([...printedShipments, firstLine.SHIPMENT_ID])
+        : printedShipments;
+
+      console.log(
+        "All checked, resetting. New checked item:",
+        firstLine.PICK_LIST_LINES_ID
+      );
+
+      // Update all state at once
+      set({
+        checkedItems: newCheckedItems,
+        matchedUPC: firstLine.UPC,
+        isCheckingItem: false,
+        lastApiCall: null,
+        printedShipments: newPrintedShipments,
+      });
+    }
+
+    // Helper function to validate item processing conditions
+    function validateItemForProcessing(item: any): {
+      isValid: boolean;
+      matchedUPC?: string;
+      message?: string;
+      showToast?: boolean;
+    } {
+      // Check for duplicate SHIPMENT_NUMBERs
+      const shipmentCounts = pickListLines.reduce((acc, line) => {
+        acc[line.SHIPMENT_NUMBER] = (acc[line.SHIPMENT_NUMBER] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const hasDuplicateShipment = shipmentCounts[item.SHIPMENT_NUMBER] > 1;
+
+      if (hasDuplicateShipment) {
+        console.log(
+          "Skipping operation: Duplicate SHIPMENT_NUMBER detected:",
+          item.SHIPMENT_NUMBER
+        );
+        return {
+          isValid: false,
+          matchedUPC: item.UPC,
+          message: `⚠️ Cannot scan/update: Multiple items found with shipment number ${item.SHIPMENT_NUMBER}. Printing is still allowed.`,
+          showToast: true,
+        };
+      }
+
+      // Check if item is already completed and checked
+      if (
+        item.SHIPPED_QTY !== null &&
+        item.QUANTITY !== null &&
+        item.SHIPPED_QTY === item.QUANTITY &&
+        checkedItems.has(item.PICK_LIST_LINES_ID)
+      ) {
+        console.log("Skipping operation: Item already completed and checked");
+        return {
+          isValid: false,
+          matchedUPC: item.UPC,
+          showToast: false,
+        };
+      }
+
+      return { isValid: true };
+    }
   },
+
   setPackingPerson: async (
     picklistid: Number,
     packingPerson: string | null,
@@ -895,6 +1144,36 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
       // const hasCheckedLines = pickListLineIds.some((id) =>
       //   checkedItems.has(id)
       // );
+
+      if (labelprinted) {
+        console.log("Group print:  only printing");
+        // Now proceed with printing (single print call for the whole group)
+        const printResponse = await fetch(`${PRINTER_BASE_URL}/print`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ shipmentId }),
+        });
+
+        if (!printResponse.ok) {
+          throw new Error(`Print request failed: ${printResponse.statusText}`);
+        }
+      } else {
+        console.log("Group print: generating new label");
+
+        const printResponse = await fetch(
+          `${PRINTER_BASE_URL}/generate-and-print`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ shipmentId }),
+          }
+        );
+
+        if (!printResponse.ok) {
+          throw new Error(`Print request failed: ${printResponse.statusText}`);
+        }
+      }
+
       const allLinesChecked = pickListLineIds.every((id) =>
         checkedItems.has(id)
       );
@@ -943,34 +1222,7 @@ export const usePickListStore = create<PickListStore>((set, get) => ({
       } else {
         console.log("Group print: All items already checked, only printing");
       }
-      if (labelprinted) {
-        console.log("Group print:  only printing");
-        // Now proceed with printing (single print call for the whole group)
-        const printResponse = await fetch(`${PRINTER_BASE_URL}/print`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shipmentId }),
-        });
 
-        if (!printResponse.ok) {
-          throw new Error(`Print request failed: ${printResponse.statusText}`);
-        }
-      } else {
-        console.log("Group print: generating new label");
-
-        const printResponse = await fetch(
-          `${PRINTER_BASE_URL}/generate-and-print`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ shipmentId }),
-          }
-        );
-
-        if (!printResponse.ok) {
-          throw new Error(`Print request failed: ${printResponse.statusText}`);
-        }
-      }
       // console.log(
       //   "Group print: Print request successful for shipment:",
       //   shipmentId
